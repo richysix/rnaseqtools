@@ -1,0 +1,13 @@
+Package: rnaseqtools
+Type: Package
+Title: Helpers for dealing with our RNA-seq output
+Version: 0.0.0.9000
+Authors@R: person("Richard", "White", email = "richard.white@sanger.ac.uk", role = c("aut", "cre"))
+Description: A set of helper functions for dealing with RNA-seq output files.
+    Includes functions for loading output files from DESeq2, 
+    dealing with differences in column names, getting normalised counts etc.
+License: GPL-3
+Encoding: UTF-8
+LazyData: true
+Imports:
+  DESeq2
