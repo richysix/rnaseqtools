@@ -15,14 +15,27 @@ test_all_data <- data.frame(
   'Gene name' = paste0('gene-', seq_len(num_rows))
 )
 test_all_data$chr <- factor(test_all_data$chr)
-for(num in seq_len(6)) {
+sample_num <- 6
+counts_list <- vector("list", length = sample_num)
+for(num in seq_len(sample_num)) {
   sample_name <- paste0('sample-', num, ' count')
-  test_all_data[[sample_name]] <- as.integer(floor(runif(num_rows)*100))
+  counts <- as.integer(floor(runif(num_rows)*100))
+  test_all_data[[sample_name]] <- counts
+  counts_list[[num]] <- counts
 }
-for(num in seq_len(6)) {
+counts <- as.data.frame(do.call('cbind', counts_list))
+names(counts) <- paste0('sample-', seq_len(sample_num))
+
+norm_counts_list <- vector("list", length = sample_num)
+for(num in seq_len(sample_num)) {
   sample_name <- paste0('sample-', num, ' normalised count')
-  test_all_data[[sample_name]] <- runif(num_rows)*100
+  norm_counts <- runif(num_rows)*100
+  test_all_data[[sample_name]] <- norm_counts
+  norm_counts_list[[num]] <- norm_counts
 }
+norm_counts <- as.data.frame(do.call('cbind', norm_counts_list))
+names(norm_counts) <- paste0('sample-', seq_len(sample_num))
+
 names(test_all_data) <- gsub("\\.", " ", names(test_all_data))
 write.table(test_all_data, file = "test_data.tmp", quote = FALSE,
             row.names = FALSE, col.names = TRUE, sep = "\t")
@@ -72,6 +85,11 @@ test_that("load RNAseq data",{
 
   expect_equal(load_rnaseq_data('test_data.tmp'),
                test_all_data)
+})
+
+test_that("get counts", {
+  expect_equal(get_counts(test_all_data), counts)
+  expect_equal(get_counts(test_all_data, normalised = TRUE), norm_counts)
 })
 
 teardown({
