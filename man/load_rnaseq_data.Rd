@@ -18,6 +18,6 @@ and returns a data.frame with column names adjusted to
 take account of different column name formats.
 }
 \examples{
-data <- load_rnaseq_data(datafile = 'all.tsv')
+data <- load_rnaseq_data(data_file = 'all.tsv')
 
 }

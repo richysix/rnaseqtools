@@ -16,7 +16,6 @@
 #' counts_subset <- get_counts(data, samples)
 #'
 #' @export
-# get count data
 get_counts <- function(data, samples = NULL, normalised = FALSE) {
   if (normalised) {
     count_data <- data[,grepl(".normalised.counts?$", names(data))]
