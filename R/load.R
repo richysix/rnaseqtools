@@ -9,7 +9,7 @@
 #' @return data.frame
 #'
 #' @examples
-#' data <- load_rnaseq_data(datafile = 'all.tsv')
+#' data <- load_rnaseq_data(data_file = 'all.tsv')
 #'
 #' @export
 load_rnaseq_data <- function(data_file) {
