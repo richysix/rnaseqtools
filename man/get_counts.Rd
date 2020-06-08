@@ -11,7 +11,7 @@ get_counts(data, samples = NULL, normalised = FALSE)
 
 \item{samples}{df a samples df to subset the data to}
 
-\item{normalised}{logical indicatig whether to return
+\item{normalised}{logical indicating whether to return
 normalised counts or raw}
 }
 \value{

@@ -10,11 +10,11 @@ load_rnaseq_data(data_file)
 \item{data_file}{char, Name of the file to open}
 }
 \value{
-data.frame
+tibble
 }
 \description{
 \code{load_rnaseq_data} opens a file containing count data
-and returns a data.frame with column names adjusted to
+and returns a tibble with column names adjusted to
 take account of different column name formats.
 }
 \examples{
