@@ -1,12 +1,12 @@
 #' Load RNA-seq count data in from file
 #'
 #' \code{load_rnaseq_data} opens a file containing count data
-#' and returns a data.frame with column names adjusted to
+#' and returns a tibble with column names adjusted to
 #' take account of different column name formats.
 #'
 #' @param data_file char, Name of the file to open
 #'
-#' @return data.frame
+#' @return tibble
 #'
 #' @examples
 #' data <- load_rnaseq_data(data_file = 'all.tsv')
@@ -14,7 +14,7 @@
 #' @export
 load_rnaseq_data <- function(data_file) {
   # Read data
-  data <- read.delim(data_file, header=TRUE, check.names=FALSE)
+  data <- readr::read_tsv(data_file)
   data <- standardise_colnames(data)
   data <- standardise_coltypes(data)
 
@@ -82,3 +82,29 @@ standardise_coltypes <- function(data) {
   return(data)
 }
 
+#' Load RNA-seq samples file
+#'
+#' \code{load_rnaseq_samples} opens a file containing sample
+#' data and returns a tibble with column names adjusted to
+#' take account of different column name formats.
+#'
+#' @param data_file char, Name of the file to open
+#'
+#' @return tibble
+#'
+#' @examples
+#' data <- load_rnaseq_samples(samples_file = 'samples.tsv')
+#'
+#' @export
+load_rnaseq_samples <- function(samples_file) {
+  # Read data
+  samples <- read_tsv(samples_file)
+  # set levels of sample (order in which they appear)
+  samples$sample <-
+    factor(samples$sample, levels = samples$sample)
+  # set levels of condition (order in which they appear)
+  samples$condition <-
+    factor(samples$condition, levels = unique(samples$condition))
+
+  return(samples)
+}
