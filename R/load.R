@@ -12,9 +12,9 @@
 #' data <- load_rnaseq_data(data_file = 'all.tsv')
 #'
 #' @export
-load_rnaseq_data <- function(data_file) {
+load_rnaseq_data <- function(data_file, ...) {
   # Read data
-  data <- readr::read_tsv(data_file)
+  data <- readr::read_tsv(data_file, ...)
   data <- standardise_colnames(data)
   data <- standardise_coltypes(data)
 
