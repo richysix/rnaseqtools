@@ -30,7 +30,7 @@ get_counts <- function(data, samples = NULL, normalised = FALSE) {
   # TO ADD: check all samples exist in counts
   # and if any are in counts that aren't in samples
   if (!is.null(samples)) {
-    count_data <- select(count_data, !!as.character(samples$sample))
+    count_data <- select(count_data, one_of(as.character(samples$sample)))
   }
 
   return(count_data)
@@ -68,17 +68,33 @@ get_gene_metadata <- function(data) {
 #' non_count_data <- subset_to_samples(data, samples)
 #'
 #' @export
-subset_to_samples <- function(data, samples) {
+subset_to_samples <- function(data, samples, counts = TRUE, normalised_counts = TRUE) {
   subset_metadata <- get_gene_metadata(data)
-  # get counts
-  counts <- get_counts(data, samples, normalised = FALSE)
-  # add back 'count' to end of column names
-  colnames(counts) <- paste(colnames(counts), 'count')
+  if (counts) {
+    # get counts
+    counts <- get_counts(data, samples, normalised = FALSE)
+    # add back 'count' to end of column names
+    colnames(counts) <- paste(colnames(counts), 'count')
+  }
 
-  # get normalised counts and add normalised count back to col names
-  norm_counts <- get_counts(data, samples, normalised = TRUE)
-  colnames(norm_counts) <- paste(colnames(norm_counts), 'normalised count')
+  if (normalised_counts) {
+    # get normalised counts and add normalised count back to col names
+    norm_counts <- get_counts(data, samples, normalised = TRUE)
+    colnames(norm_counts) <- paste(colnames(norm_counts), 'normalised count')
+  }
 
-  subset_data <- as_tibble(cbind(subset_metadata, counts, norm_counts))
+  if (counts) {
+    if (normalised_counts) {
+      subset_data <- as_tibble(cbind(subset_metadata, counts, norm_counts))
+    } else {
+      subset_data <- as_tibble(cbind(subset_metadata, counts))
+    }
+  } else {
+    if (normalised_counts) {
+      subset_data <- as_tibble(cbind(subset_metadata, norm_counts))
+    } else {
+      subset_data <- as_tibble(subset_metadata)
+    }
+  }
   return(subset_data)
 }
