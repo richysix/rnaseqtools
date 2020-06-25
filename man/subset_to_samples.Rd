@@ -4,12 +4,16 @@
 \alias{subset_to_samples}
 \title{Subset an RNA-seq dataset using a samples file}
 \usage{
-subset_to_samples(data, samples)
+subset_to_samples(data, samples, counts = TRUE, normalised_counts = TRUE)
 }
 \arguments{
 \item{data}{df rna-seq data to get counts from}
 
 \item{samples}{df a samples df to subset the data to}
+
+\item{counts}{logical indicating whether to include raw counts in the results}
+
+\item{normalised_counts}{logical indicating whether to include normalised counts in the results}
 }
 \value{
 data.frame

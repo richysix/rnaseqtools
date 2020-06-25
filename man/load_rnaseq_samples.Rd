@@ -7,17 +7,18 @@
 load_rnaseq_samples(samples_file)
 }
 \arguments{
-\item{data_file}{char, Name of the file to open}
+\item{samples_file}{Name of the file to open}
 }
 \value{
 tibble
 }
 \description{
 \code{load_rnaseq_samples} opens a file containing sample
-data and returns a tibble with column names adjusted to
-take account of different column name formats.
+data and returns a tibble
+It expects the file to contain columns named sample and
+condition which it will make factors.
 }
 \examples{
-data <- load_rnaseq_samples(samples_file = 'samples.tsv')
+data <- load_rnaseq_samples(samples_file = 'test_samples.tsv')
 
 }

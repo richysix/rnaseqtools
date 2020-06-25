@@ -4,10 +4,12 @@
 \alias{load_rnaseq_data}
 \title{Load RNA-seq count data in from file}
 \usage{
-load_rnaseq_data(data_file)
+load_rnaseq_data(data_file, ...)
 }
 \arguments{
 \item{data_file}{char, Name of the file to open}
+
+\item{...}{Arguments passed to \code{\link[readr]{read_tsv}}}
 }
 \value{
 tibble
