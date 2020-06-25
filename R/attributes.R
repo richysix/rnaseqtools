@@ -30,7 +30,7 @@ get_counts <- function(data, samples = NULL, normalised = FALSE) {
   # TO ADD: check all samples exist in counts
   # and if any are in counts that aren't in samples
   if (!is.null(samples)) {
-    count_data <- select(count_data, one_of(as.character(samples$sample)))
+    count_data <- dplyr::select(count_data, dplyr::one_of(as.character(samples$sample)))
   }
 
   return(count_data)
@@ -61,6 +61,8 @@ get_gene_metadata <- function(data) {
 #'
 #' @param data df rna-seq data to get counts from
 #' @param samples df a samples df to subset the data to
+#' @param counts logical indicating whether to include raw counts in the results
+#' @param normalised_counts logical indicating whether to include normalised counts in the results
 #'
 #' @return data.frame
 #'
@@ -85,15 +87,15 @@ subset_to_samples <- function(data, samples, counts = TRUE, normalised_counts = 
 
   if (counts) {
     if (normalised_counts) {
-      subset_data <- as_tibble(cbind(subset_metadata, counts, norm_counts))
+      subset_data <- tibble::as_tibble(cbind(subset_metadata, counts, norm_counts))
     } else {
-      subset_data <- as_tibble(cbind(subset_metadata, counts))
+      subset_data <- tibble::as_tibble(cbind(subset_metadata, counts))
     }
   } else {
     if (normalised_counts) {
-      subset_data <- as_tibble(cbind(subset_metadata, norm_counts))
+      subset_data <- tibble::as_tibble(cbind(subset_metadata, norm_counts))
     } else {
-      subset_data <- as_tibble(subset_metadata)
+      subset_data <- tibble::as_tibble(subset_metadata)
     }
   }
   return(subset_data)
