@@ -48,10 +48,18 @@ set_col_types <- function(data_file){
     "Chr" = "f",
     "start" = "i",
     "Start" = "i",
+    "Region start" = "i",
+    "Region end" = "i",
     "end" = "i",
     "End" = "i",
     "strand" = "f",
-    "Strand" = "f"
+    "Strand" = "f",
+    "3' end position" = "c",
+    "3' end strand" = "f",
+    "3' end read count" = "c",
+    "p value" = "d",
+    "Adjusted p value" = "d",
+    "Distance to 3' end" = "c"
   )
 
   # get columns
@@ -66,6 +74,10 @@ set_col_types <- function(data_file){
         column_types[[colname]] <- readr::col_factor()
       } else if (types_for_cols[[colname]] == "i") {
         column_types[[colname]] <- readr::col_integer()
+      } else if (types_for_cols[[colname]] == "c") {
+        column_types[[colname]] <- readr::col_character()
+      } else if (types_for_cols[[colname]] == "d") {
+        column_types[[colname]] <- readr::col_double()
       }
     } else if (grepl("count$", colname)) {
       if (grepl("normalised", colname)) {
