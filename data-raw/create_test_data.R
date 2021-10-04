@@ -1,4 +1,5 @@
 library(tibble)
+library(readr)
 library(rprojroot)
 
 root_path <- find_root(is_rstudio_project)
@@ -28,6 +29,7 @@ for(num in seq_len(sample_num)) {
 }
 counts <- as.data.frame(do.call('cbind', counts_list))
 names(counts) <- paste0('sample-', seq_len(sample_num))
+counts <- as_tibble(counts)
 
 norm_counts_list <- vector("list", length = sample_num)
 for(num in seq_len(sample_num)) {
@@ -38,6 +40,7 @@ for(num in seq_len(sample_num)) {
 }
 norm_counts <- as.data.frame(do.call('cbind', norm_counts_list))
 names(norm_counts) <- paste0('sample-', seq_len(sample_num))
+norm_counts <- as_tibble(norm_counts)
 
 # write a file for testing load_rnaseq_data
 write.table(test_all_data, quote = FALSE,
@@ -52,7 +55,7 @@ samples_data <- tibble(
   sex = rep(c('M', 'F'), 3)
 )
 # write a file for testing load_rnaseq_samples
-write_tsv(samples_data, path = file.path(root_path, "tests", "testthat", "test_samples.tsv") )
+write_tsv(samples_data, file = file.path(root_path, "tests", "testthat", "test_samples.tsv") )
 
 # save test data as R objects
 save(test_all_data, counts, norm_counts, samples_data,

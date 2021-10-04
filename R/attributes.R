@@ -27,9 +27,24 @@ get_counts <- function(data, samples = NULL, normalised = FALSE) {
   }
 
   # Subset and reorder count data
-  # TO ADD: check all samples exist in counts
-  # and if any are in counts that aren't in samples
   if (!is.null(samples)) {
+    samples_in_counts <- colnames(count_data) %>% sub(".counts?$", "", .)
+    missing_samples <- setdiff(samples$sample, samples_in_counts)
+    if(length(missing_samples) > 0) {
+      rlang::abort(class = "samples_missing",
+                   message = paste("One or more samples are missing from the counts data,",
+                                   paste0(missing_samples, collapse = ", "))
+                   )
+    }
+
+    extra_samples <- setdiff(samples_in_counts, samples$sample)
+    if(length(extra_samples) > 0) {
+      rlang::warn(class = "sample_subset",
+                   message = paste("One or more extra samples in the counts data,",
+                                   paste0(extra_samples, collapse = ", "))
+      )
+    }
+
     count_data <- dplyr::select(count_data, dplyr::one_of(as.character(samples$sample)))
   }
 
@@ -74,26 +89,46 @@ subset_to_samples <- function(data, samples, counts = TRUE, normalised_counts = 
   subset_metadata <- get_gene_metadata(data)
   if (counts) {
     # get counts
-    counts <- get_counts(data, samples, normalised = FALSE)
+    sample_counts <-
+      tryCatch(
+        get_counts(data, samples, normalised = FALSE),
+        warning = function(w){
+          if("sample_subset" %in% class(w)) {
+            suppressWarnings(get_counts(data, samples, normalised = FALSE))
+          } else {
+            get_counts(data, samples, normalised = FALSE)
+          }
+        }
+      )
     # add back 'count' to end of column names
-    colnames(counts) <- paste(colnames(counts), 'count')
+    colnames(sample_counts) <- paste(colnames(sample_counts), 'count')
   }
 
   if (normalised_counts) {
     # get normalised counts and add normalised count back to col names
-    norm_counts <- get_counts(data, samples, normalised = TRUE)
-    colnames(norm_counts) <- paste(colnames(norm_counts), 'normalised count')
+    sample_norm_counts <-
+      tryCatch(
+        get_counts(data, samples, normalised = TRUE),
+        warning = function(w){
+          if("sample_subset" %in% class(w)) {
+            suppressWarnings(get_counts(data, samples, normalised = TRUE))
+          } else {
+            get_counts(data, samples, normalised = TRUE)
+          }
+        }
+      )
+    colnames(sample_norm_counts) <- paste(colnames(sample_norm_counts), 'normalised count')
   }
 
   if (counts) {
     if (normalised_counts) {
-      subset_data <- tibble::as_tibble(cbind(subset_metadata, counts, norm_counts))
+      subset_data <- tibble::as_tibble(cbind(subset_metadata, sample_counts, sample_norm_counts))
     } else {
-      subset_data <- tibble::as_tibble(cbind(subset_metadata, counts))
+      subset_data <- tibble::as_tibble(cbind(subset_metadata, sample_counts))
     }
   } else {
     if (normalised_counts) {
-      subset_data <- tibble::as_tibble(cbind(subset_metadata, norm_counts))
+      subset_data <- tibble::as_tibble(cbind(subset_metadata, sample_norm_counts))
     } else {
       subset_data <- tibble::as_tibble(subset_metadata)
     }

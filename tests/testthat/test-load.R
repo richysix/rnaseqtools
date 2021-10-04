@@ -67,12 +67,9 @@ test_that("load RNAseq data",{
 # test loading samples file
 samples <- load_rnaseq_samples('test_samples.tsv')
 test_that("load samples", {
-  expect_equal(samples, samples_data)
-})
-
-test_that("get counts", {
-  expect_equal(get_counts(test_all_data), counts)
-  expect_equal(get_counts(test_all_data, normalised = TRUE), norm_counts)
+  expect_equal(samples$sample, samples_data$sample)
+  expect_equal(samples$condition, samples_data$condition)
+  expect_equal(samples$sex, samples_data$sex)
 })
 
 teardown({
