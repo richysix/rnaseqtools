@@ -72,6 +72,47 @@ test_that("load samples", {
   expect_equal(samples$sex, samples_data$sex)
 })
 
+## DeTCT data
+detct_colnames <- c('chr' = 'Chr', '#Chr' = 'Chr', 'Region start' = 'RegionStart',
+              'Region end' = 'RegionEnd', "3' end position" = '3PrimeEndPosition',
+              "3' end strand" = '3PrimeEndStrand', "3' end read count" = '3PrimeEndReadCount',
+              'p value' = 'pval', 'Adjusted p value' = 'adjp',
+              "Distance to 3' end" = 'DistanceTo3PrimeEnd',
+              'e98 Ensembl Gene ID' = 'GeneID',
+              "Gene type" = 'GeneType',
+              'e98 Ensembl Transcript ID' = 'TranscriptID',
+              "Transcript type" = 'TranscriptType',
+              'Gene name' = 'Name', 'Gene description' = 'Description')
+
+# create a test data frame with all the colnames that need changing
+num_rows <- 5
+test_df <- data.frame(
+  matrix(seq_len(num_rows*length(detct_colnames)), nrow = num_rows)
+)
+names(test_df) <- names(detct_colnames)
+
+test_that("standardise colnames",{
+  expect_equal(names(standardise_colnames(test_df)),
+               unname(detct_colnames))
+})
+
+# check loading DeTCT data
+detct_data <- load_rnaseq_data('test_detct_data.tsv')
+test_that("load DeTCT data", {
+  expect_equal(detct_data, test_detct_data, check.attributes = FALSE)
+})
+
+test_that("check col names", {
+  expect_equal(colnames(detct_data),
+               colnames(standardise_colnames(test_detct_data)),
+               check.attributes = FALSE)
+})
+
+test_that("check col types", {
+  expect_equal(purrr::map_chr(detct_data, class),
+               purrr::map_chr(test_detct_data, class), check.attributes = FALSE)
+})
+
 teardown({
   unlink('test_data.tmp')
 })

@@ -43,54 +43,54 @@ load_rnaseq_data <- function(data_file, ...) {
 #'
 set_col_types <- function(data_file){
   types_for_cols = c(
-    "chr" = "f",
-    "#Chr" = "f",
     "Chr" = "f",
-    "start" = "i",
     "Start" = "i",
-    "Region start" = "i",
-    "Region end" = "i",
-    "end" = "i",
     "End" = "i",
-    "strand" = "f",
+    "RegionStart" = "i",
+    "RegionEnd" = "i",
     "Strand" = "f",
-    "3' end position" = "c",
-    "3' end strand" = "f",
-    "3' end read count" = "c",
-    "p value" = "d",
-    "Adjusted p value" = "d",
-    "Distance to 3' end" = "c"
+    "3PrimeEndPosition" = "c",
+    "3PrimeEndStrand" = "f",
+    "3PrimeEndReadCount" = "c",
+    "DistanceTo3PrimeEnd" = "c",
+    "pval" = "d",
+    "adjp" = "d"
   )
 
   # get columns
   header <- readr::read_tsv(data_file, n_max = 1000)
-  # set column types
-  column_types <- vector('list', length = ncol(header))
-  names(column_types) <- colnames(header)
-  for(colname in colnames(header)) {
+  standard_colnames <- colnames(standardise_colnames(header))
+
+  coltype_for_column_name <- function(i, standard_colnames, types_for_cols, header) {
+    standard_colname <- standard_colnames[i]
+    original_colname <- colnames(header)[i]
     # check if the colname is in types_for_cols
-    if (colname %in% names(types_for_cols)) {
-      if (types_for_cols[[colname]] == "f") {
-        column_types[[colname]] <- readr::col_factor()
-      } else if (types_for_cols[[colname]] == "i") {
-        column_types[[colname]] <- readr::col_integer()
-      } else if (types_for_cols[[colname]] == "c") {
-        column_types[[colname]] <- readr::col_character()
-      } else if (types_for_cols[[colname]] == "d") {
-        column_types[[colname]] <- readr::col_double()
+    if (standard_colname %in% names(types_for_cols)) {
+      if (types_for_cols[[standard_colname]] == "f") {
+        return(readr::col_factor())
+      } else if (types_for_cols[[standard_colname]] == "i") {
+        return(readr::col_integer())
+      } else if (types_for_cols[[standard_colname]] == "c") {
+        return(readr::col_character())
+      } else if (types_for_cols[[standard_colname]] == "d") {
+        return(readr::col_double())
       }
-    } else if (grepl("count$", colname)) {
-      if (grepl("normalised", colname)) {
-        column_types[[colname]] <- readr::col_double()
+    } else if (grepl("count$", standard_colname)) {
+      if (grepl("normalised", standard_colname)) {
+        return(readr::col_double())
       } else {
         # count columns should be integer
-        column_types[[colname]] <- readr::col_integer()
+        return(readr::col_integer())
       }
     } else {
       # everything else should be as parsed
-      column_types[[colname]] <- readr::spec(header)$cols[[colname]]
+      return(readr::spec(header)$cols[[original_colname]])
     }
   }
+  # set column types
+  column_types <- purrr::map(seq_len(ncol(header)), coltype_for_column_name,
+                             standard_colnames, types_for_cols, header)
+  names(column_types) <- colnames(header)
   return(column_types)
 }
 
@@ -124,6 +124,20 @@ standardise_colnames <- function(data) {
   names(data)[names(data) == 'padj']              <- 'adjp'
   names(data)[names(data) == 'Adjusted p value']  <- 'adjp'
   names(data)[names(data) == 'Gene name']         <- 'Name'
+
+  # detct names
+  names(data)[names(data) == 'p value']                 <- 'pval'
+  names(data)[names(data) == 'Gene description']        <- 'Description'
+  names(data)[names(data) == 'Region start']            <- 'RegionStart'
+  names(data)[names(data) == 'Region end']              <- 'RegionEnd'
+  names(data)[names(data) == "3' end position"]         <- '3PrimeEndPosition'
+  names(data)[names(data) == "3' end strand"]           <- '3PrimeEndStrand'
+  names(data)[names(data) == "3' end read count"]       <- '3PrimeEndReadCount'
+  names(data)[names(data) == "Distance to 3' end"]      <- 'DistanceTo3PrimeEnd'
+  names(data)[names(data) == "Gene type"]               <- 'GeneType'
+  names(data)[ grepl("e[0-9]+ Ensembl Transcript ID",
+                     names(data)) ]                     <- 'TranscriptID'
+  names(data)[names(data) == "Transcript type"]         <- 'TranscriptType'
 
   return(data)
 }
