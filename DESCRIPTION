@@ -1,7 +1,7 @@
 Package: rnaseqtools
 Type: Package
 Title: Helpers for dealing with our RNA-seq output
-Version: 0.0.0.9007
+Version: 0.0.0.9008
 Authors@R: person("Richard", "White", email = "richard.white@sanger.ac.uk", role = c("aut", "cre"))
 Description: A set of helper functions for dealing with RNA-seq output files.
     Includes functions for loading output files from DESeq2, 
