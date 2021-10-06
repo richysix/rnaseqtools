@@ -11,11 +11,12 @@ Depends: R (>= 3.5.0)
 Encoding: UTF-8
 LazyData: true
 Imports:
-  DESeq2,
-  readr,
-  tidyr,
-  dplyr,
-  tibble
+    DESeq2,
+    readr,
+    tidyr,
+    dplyr,
+    tibble,
+    magrittr
 RoxygenNote: 7.0.2
 Suggests: 
     testthat (>= 2.1.0)

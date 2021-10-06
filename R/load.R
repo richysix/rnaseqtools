@@ -20,7 +20,41 @@ load_rnaseq_data <- function(data_file, ...) {
   # Read data
   data <- readr::read_tsv(data_file, col_types = do.call(readr::cols, coltypes), ...)
   data <- standardise_colnames(data)
-  # data <- standardise_coltypes(data)
+
+  return(data)
+}
+
+#' Load DeTCT count data in from file
+#'
+#' \code{load_detct_data} opens a file containing count data
+#' and returns a tibble with column names adjusted to
+#' take account of different column name formats.
+#' If it doesn't already exist, it creates a column called RegionID
+#' made up of Chr:RegionStart:RegionEnd:3PrimeEndPosition:3PrimeEndStrand:GeneID
+#'
+#' @param data_file char, Name of the file to open
+#' @param ... Arguments passed to \code{\link[readr]{read_tsv}}
+#'
+#' @return tibble
+#'
+#' @examples
+#' data <- load_detct_data(data_file = 'all.tsv')
+#'
+#' @export
+load_detct_data <- function(data_file, ...) {
+  # set col types
+  coltypes <- set_col_types(data_file)
+
+  # Read data
+  data <- readr::read_tsv(data_file, col_types = do.call(readr::cols, coltypes), ...)
+  data <- standardise_colnames(data)
+
+  if(!("RegionID" %in% colnames(data))) {
+    data <- data %>%
+      dplyr::mutate(., RegionID = paste(Chr, RegionStart, RegionEnd, `3PrimeEndPosition`,
+                                        `3PrimeEndStrand`, GeneID, sep = ":")) %>%
+      dplyr::relocate(., RegionID)
+  }
 
   return(data)
 }
@@ -46,9 +80,10 @@ set_col_types <- function(data_file){
     "Chr" = "f",
     "Start" = "i",
     "End" = "i",
+    "Strand" = "f",
     "RegionStart" = "i",
     "RegionEnd" = "i",
-    "Strand" = "f",
+    "RegionID" = "c",
     "3PrimeEndPosition" = "c",
     "3PrimeEndStrand" = "f",
     "3PrimeEndReadCount" = "c",

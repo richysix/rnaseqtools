@@ -121,6 +121,13 @@ test_that("check col types", {
                purrr::map_chr(test_detct_data, class), check.attributes = FALSE)
 })
 
+# check loading DeTCT data with load_detct data
+# this function adds a RegionID column
+detct_data <- load_detct_data('test_detct_data.tsv')
+test_that("load DeTCT data", {
+  expect_equal(colnames(detct_data)[1], "RegionID")
+})
+
 teardown({
   unlink('test_data.tmp')
 })
