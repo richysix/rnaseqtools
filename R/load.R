@@ -58,7 +58,8 @@ set_col_types <- function(data_file){
   )
 
   # get columns
-  header <- readr::read_tsv(data_file, n_max = 1000)
+  header <- readr::read_tsv(data_file, n_max = 1000,
+                            col_types = readr::cols())
   standard_colnames <- colnames(standardise_colnames(header))
 
   coltype_for_column_name <- function(i, standard_colnames, types_for_cols, header) {
