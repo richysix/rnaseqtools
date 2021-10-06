@@ -158,13 +158,36 @@ standardise_colnames <- function(data) {
 #'
 #' @export
 load_rnaseq_samples <- function(samples_file) {
-  # Read data
+  # check header
   samples <-
-    readr::read_tsv(samples_file,
-                    col_types = readr::cols(
-                      sample = readr::col_factor(),
-                      condition = readr::col_factor()
-                    )
+    tryCatch(readr::read_tsv(samples_file,
+                             col_types = readr::cols(
+                               sample = readr::col_factor(),
+                               condition = readr::col_factor()
+                             )
+    ),
+    warning = function(w){
+      # print(w)
+      # print(w$message)
+      if(grepl("Missing column names filled in: 'X1'", w$message)) {
+        # print("X1 match")
+        header <- suppressWarnings(readr::read_tsv(samples_file, n_max = 2,
+                                                   col_types = readr::cols()))
+        cols_list <- readr::spec(header)$cols
+        names(cols_list)[ names(cols_list) == "X1" ] <- "sample"
+        cols_list[['sample']] <- readr::col_factor()
+        if('condition' %in% names(cols_list)) {
+          cols_list[['condition']] <- readr::col_factor()
+        }
+        return(readr::read_tsv(samples_file, skip = 1,
+                               col_names = names(cols_list),
+                               col_types = do.call(readr::cols, cols_list)))
+      } else {
+        rlang::warn(message = w$message, class = "sample_load")
+      }
+    },
+    error = function(e){ stop(e) },
+    message = function(m){ message(m) }
     )
 
   return(samples)

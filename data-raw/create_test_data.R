@@ -57,6 +57,17 @@ samples_data <- tibble(
 # write a file for testing load_rnaseq_samples
 write_tsv(samples_data, file = file.path(root_path, "tests", "testthat", "test_samples.tsv") )
 
+samples_txt_data <- data.frame(
+  row.names = factor(paste0('sample-', seq_len(sample_num))),
+  condition = factor(rep(c('wt', 'mut'), each = 3),
+                     levels = c('wt', 'mut')),
+  sex = rep(c('M', 'F'), 3)
+)
+# write a file for testing load_rnaseq_samples
+write.table(samples_txt_data, quote = FALSE,
+            row.names = TRUE, col.names = NA, sep = "\t",
+            file = file.path(root_path, "tests", "testthat", "test_samples.txt") )
+
 # create test DeTCT data object
 num_rows <- 100
 set.seed(802)

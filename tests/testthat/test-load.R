@@ -72,6 +72,14 @@ test_that("load samples", {
   expect_equal(samples$sex, samples_data$sex)
 })
 
+# test loading a samples file where the first column isn't labelled
+samples_txt <- load_rnaseq_samples('test_samples.txt')
+test_that("load samples.txt", {
+  expect_equal(colnames(samples_txt), c('sample', 'condition', 'sex'))
+  expect_equal(class(samples_txt$condition), 'factor')
+  expect_equal(class(samples_txt$sex), 'character')
+})
+
 ## DeTCT data
 detct_colnames <- c('chr' = 'Chr', '#Chr' = 'Chr', 'Region start' = 'RegionStart',
               'Region end' = 'RegionEnd', "3' end position" = '3PrimeEndPosition',
