@@ -228,3 +228,69 @@ load_rnaseq_samples <- function(samples_file) {
 
   return(samples)
 }
+
+#' See if sample and count data.frames have matching samples
+#'
+#' @description
+#' `check_samples()` takes sample and data data.frames and checks that
+#'  the samples match between the two. It checks both `counts` and
+#'  `normalised counts`. If there are samples
+#'  in the samples data.frame that don't exist in the corresponding counts
+#'  data.frame, an error is raised. If there are samples in the counts data.frame that
+#'  aren't in the samples data.frame a warning is raised. If the samples
+#'  match exactly, the function returns TRUE invisibly.
+#'
+#'  `check_samples_match_counts()` takes sample and count data.frames
+#'  and checks that the samples match between the two. This does the actual checking
+#'  that the samples match. `check_samples()` gets the counts and normalised counts
+#'  form the data data.frame and passes them on to `check_samples_match_counts()`
+#'
+#' @param rnaseq_data data.frame of gene metadata, counts and normalised counts
+#' @param count_data data.frame of counts only
+#' @param samples data.frame of sample info
+#'
+#' @return TRUE invisibly if the samples match
+#'
+#' @export
+#'
+#' @examples
+#'
+#' check_samples_match_counts(test_all_data, samples_data)
+#'
+#' check_samples_match_counts(counts, samples_data)
+#'
+#' check_samples_match_counts(norm_counts, samples_data)
+#'
+check_samples <- function(rnaseq_data, samples) {
+  # get counts
+  # don't use the samples df
+  counts <- get_counts(rnaseq_data)
+  counts <- get_counts(rnaseq_data)
+  check_samples_match_counts(counts, samples)
+  # same for normalised counts
+  norm_counts <- get_counts(rnaseq_data, normalised = TRUE)
+  check_samples_match_counts(norm_counts, samples)
+  return(invisible(TRUE))
+}
+
+#' @rdname check_samples
+#' @export
+check_samples_match_counts <- function(count_data, samples) {
+  samples_in_counts <- colnames(count_data)
+  missing_samples <- setdiff(samples$sample, samples_in_counts)
+  if(length(missing_samples) > 0) {
+    rlang::abort(class = "samples_missing",
+                 message = paste("One or more samples are missing from the counts data,",
+                                 paste0(missing_samples, collapse = ", "))
+    )
+  }
+
+  extra_samples <- setdiff(samples_in_counts, samples$sample)
+  if(length(extra_samples) > 0) {
+    rlang::warn(class = "sample_subset",
+                message = paste("One or more extra samples in the counts data,",
+                                paste0(extra_samples, collapse = ", "))
+    )
+  }
+  return(invisible(TRUE))
+}
