@@ -28,19 +28,23 @@ for(num in seq_len(sample_num)) {
   counts_list[[num]] <- counts
 }
 counts <- as.data.frame(do.call('cbind', counts_list))
-names(counts) <- paste0('sample-', seq_len(sample_num), ' count')
+names(counts) <- paste0('sample-', seq_len(sample_num))
 counts <- as_tibble(counts)
 
-norm_counts_list <- vector("list", length = sample_num)
-for(num in seq_len(sample_num)) {
-  sample_name <- paste0('sample-', num, ' normalised count')
-  norm_counts <- runif(num_rows)*100
-  test_all_data[[sample_name]] <- norm_counts
-  norm_counts_list[[num]] <- norm_counts
-}
-norm_counts <- as.data.frame(do.call('cbind', norm_counts_list))
-names(norm_counts) <- paste0('sample-', seq_len(sample_num), ' normalised count')
-norm_counts <- as_tibble(norm_counts)
+DESeqData <- DESeq2::DESeqDataSetFromMatrix(counts, samples, design = ~ condition)
+DESeqData <- DESeq2::estimateSizeFactors(DESeqData)
+# get normalised counts
+norm_counts <- DESeq2::counts(DESeqData, normalized = TRUE) |>
+  as_tibble()
+# add back "normalised" to colnames
+colnames(norm_counts) <- sub("$", " normalised count", colnames(norm_counts))
+# add count back to unnormalised counts
+colnames(counts) <- sub("$", " count", colnames(counts))
+
+test_all_data <- tibble(
+  test_all_data,
+  norm_counts
+)
 
 # write a file for testing load_rnaseq_data
 write.table(test_all_data, quote = FALSE,

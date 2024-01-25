@@ -205,12 +205,12 @@ load_rnaseq_samples <- function(samples_file) {
     warning = function(w){
       # print(w)
       # print(w$message)
-      if(grepl("Missing column names filled in: 'X1'", w$message)) {
+      if(grepl("The following named parsers don't match the column names", w$message)) {
         # print("X1 match")
         header <- suppressWarnings(readr::read_tsv(samples_file, n_max = 2,
                                                    col_types = readr::cols()))
         cols_list <- readr::spec(header)$cols
-        names(cols_list)[ names(cols_list) == "X1" ] <- "sample"
+        names(cols_list)[ names(cols_list) == "...1" ] <- "sample"
         cols_list[['sample']] <- readr::col_factor()
         if('condition' %in% names(cols_list)) {
           cols_list[['condition']] <- readr::col_factor()
@@ -222,12 +222,48 @@ load_rnaseq_samples <- function(samples_file) {
         rlang::warn(message = w$message, class = "sample_load")
       }
     },
-    error = function(e){ stop(e) },
-    message = function(m){ message(m) }
+    error = function(e){ stop(e) }
+    # message = function(m){ message(m) }
     )
 
   return(samples)
 }
+
+#' Adjust RNAseq count data for library size
+#'
+#' `normalise_counts()` takes RNAseq count data and produces normalised counts
+#' that are adjusted for library size (sequencing depth). The normalised count
+#' columns are added to the supplied data frame with column names that are
+#' the original column names with " normalised count" appended.
+#'
+#' @param rnaseq_data data frame of rnaseq data. Must contain columns labelled
+#' "{sample} count".
+#' @param samples data frame of sample metadata. Must included a `condition` column.
+#'
+#' @return tibble containing the original data and the normalised count columns added
+#' @export
+#'
+#' @examples
+#'
+#' rnaseq_data <- test_all_data[ , !grepl("normalised", colnames(test_all_data)) ]
+#' rnaseq_data <- normalise_counts(rnaseq_data, samples_data)
+#'
+normalise_counts <- function(rnaseq_data, samples){
+  # get counts
+  counts <- get_counts(rnaseq_data)
+  # check samples match
+  check_samples_match_counts(counts, samples)
+  # make DESeq2 object
+  DESeqData <- DESeq2::DESeqDataSetFromMatrix(counts, samples, design = ~ condition)
+  DESeqData <- DESeq2::estimateSizeFactors(DESeqData)
+  # get normalised counts
+  norm_counts <- DESeq2::counts(DESeqData, normalized = TRUE)
+  # add back "normalised" to colnames
+  colnames(norm_counts) <- sub("$", " normalised count", colnames(norm_counts))
+  # add to rnaseq data
+  return(tibble::tibble(rnaseq_data, tibble::as_tibble(norm_counts)))
+}
+
 
 #' See if sample and count data.frames have matching samples
 #'

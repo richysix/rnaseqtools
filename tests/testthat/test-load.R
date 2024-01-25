@@ -142,12 +142,19 @@ test_that("check_samples_match_counts works", {
 test_that("check_samples works", {
   expect_true(check_samples(test_all_data, samples_data))
   # check sample missing from sample data
+  # remove one sample from samples
+  samples_tmp <- samples_data[ samples_data$sample != "sample-1", ]
   expect_warning(check_samples(test_all_data, samples_tmp), "One or more extra samples in the counts data")
   # check sample missing from counts
   all_data_tmp <- test_all_data[ , colnames(test_all_data) != "sample-6 count"]
   expect_error(check_samples_match_counts(all_data_tmp, samples_data), "One or more samples are missing from the counts data")
   all_data_tmp <- test_all_data[ , colnames(test_all_data) != "sample-6 normalised count"]
   expect_error(check_samples_match_counts(all_data_tmp, samples_data), "One or more samples are missing from the counts data")
+})
+
+test_that("normalise_counts works", {
+  test_data_counts <- test_all_data[ , !grepl("normalised", colnames(test_all_data)) ]
+  expect_equal(normalise_counts(test_data_counts, samples_data), test_all_data)
 })
 
 teardown({
