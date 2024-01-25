@@ -28,23 +28,7 @@ get_counts <- function(data, samples = NULL, normalised = FALSE) {
 
   # Subset and reorder count data
   if (!is.null(samples)) {
-    samples_in_counts <- colnames(count_data) %>% sub(".counts?$", "", .)
-    missing_samples <- setdiff(samples$sample, samples_in_counts)
-    if(length(missing_samples) > 0) {
-      rlang::abort(class = "samples_missing",
-                   message = paste("One or more samples are missing from the counts data,",
-                                   paste0(missing_samples, collapse = ", "))
-                   )
-    }
-
-    extra_samples <- setdiff(samples_in_counts, samples$sample)
-    if(length(extra_samples) > 0) {
-      rlang::warn(class = "sample_subset",
-                   message = paste("One or more extra samples in the counts data,",
-                                   paste0(extra_samples, collapse = ", "))
-      )
-    }
-
+    check_samples_match_counts(samples, count_data)
     count_data <- dplyr::select(count_data, dplyr::one_of(as.character(samples$sample)))
   }
 
