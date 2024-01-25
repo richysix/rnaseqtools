@@ -9,6 +9,8 @@
 #' normalised counts or raw
 #'
 #' @return data.frame
+#' If there is no count data in the supplied data frame
+#' (i.e.) no column names containing "count" then NULL is returned
 #'
 #' @examples
 #' norm_counts <- get_counts(data)
@@ -25,10 +27,13 @@ get_counts <- function(data, samples = NULL, normalised = FALSE) {
                          !grepl("normalised", names(data))]
     names(count_data) <- gsub(".counts?$", "", names(count_data))
   }
+  if (ncol(count_data) == 0) {
+    return(NULL)
+  }
 
   # Subset and reorder count data
   if (!is.null(samples)) {
-    check_samples_match_counts(samples, count_data)
+    check_samples_match_counts(count_data, samples)
     count_data <- dplyr::select(count_data, dplyr::one_of(as.character(samples$sample)))
   }
 

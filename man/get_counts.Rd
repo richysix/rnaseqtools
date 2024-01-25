@@ -16,6 +16,8 @@ normalised counts or raw}
 }
 \value{
 data.frame
+If there is no count data in the supplied data frame
+(i.e.) no column names containing "count" then NULL is returned
 }
 \description{
 \code{get_counts} returns a data.frame of counts,
