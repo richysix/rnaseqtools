@@ -301,7 +301,6 @@ check_samples <- function(rnaseq_data, samples) {
   # get counts
   # don't use the samples df
   counts <- get_counts(rnaseq_data)
-  counts <- get_counts(rnaseq_data)
   check_samples_match_counts(counts, samples)
   # same for normalised counts
   norm_counts <- get_counts(rnaseq_data, normalised = TRUE)
@@ -313,20 +312,31 @@ check_samples <- function(rnaseq_data, samples) {
 #' @export
 check_samples_match_counts <- function(count_data, samples) {
   samples_in_counts <- colnames(count_data)
+  extra_samples <- setdiff(samples_in_counts, samples$sample)
   missing_samples <- setdiff(samples$sample, samples_in_counts)
-  if(length(missing_samples) > 0) {
-    rlang::abort(class = "samples_missing",
-                 message = paste("One or more samples are missing from the counts data,",
-                                 paste0(missing_samples, collapse = ", "))
+
+  if(length(extra_samples) > 0) {
+    if(length(missing_samples) > 0) {
+      rlang::warn(class = "missing_from_both_samples_and_counts",
+                  message = paste(
+                    paste("One or more samples are missing from the counts data,",
+                          paste0(missing_samples, collapse = ", ")),
+                    paste("One or more extra samples in the counts data,",
+                          paste0(extra_samples, collapse = ", ")),
+                    sep = "\n")
+      )
+    } else {
+      rlang::warn(class = "missing_from_samples",
+                  message = paste("One or more extra samples in the counts data,",
+                                  paste0(extra_samples, collapse = ", "))
+      )
+    }
+  } else if(length(missing_samples) > 0) {
+    rlang::warn(class = "missing_from_counts",
+                message = paste("One or more samples are missing from the counts data,",
+                                paste0(missing_samples, collapse = ", "))
     )
   }
 
-  extra_samples <- setdiff(samples_in_counts, samples$sample)
-  if(length(extra_samples) > 0) {
-    rlang::warn(class = "sample_subset",
-                message = paste("One or more extra samples in the counts data,",
-                                paste0(extra_samples, collapse = ", "))
-    )
-  }
   return(invisible(TRUE))
 }
