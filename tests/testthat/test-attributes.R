@@ -29,9 +29,9 @@ sample_missing_from_counts <- rbind(samples_data,
 
 test_that("get_counts_errors_and_warnings",{
   expect_warning(get_counts(test_all_data, samples = sample_subset),
-                 class = "sample_subset")
-  expect_error(get_counts(test_all_data, samples = sample_missing_from_counts),
-                 class = "samples_missing")
+                 class = "missing_from_samples")
+  expect_warning(get_counts(test_all_data, samples = sample_missing_from_counts),
+                 class = "missing_from_counts")
 })
 
 # get_gene_metadata: check columns
@@ -44,7 +44,11 @@ test_that("get_gene_metadata",{
 
 # subset_to_samples
 test_that("subset_to_samples", {
-  expect_equal(dim(subset_to_samples(test_all_data, sample_subset)), c(100,13))
-  expect_equal(subset_to_samples(test_all_data, sample_subset),
+  expect_warning(subset_to_samples(test_all_data, sample_subset),
+                 class = "missing_from_samples")
+  expect_warning(subset_to_samples(test_all_data, sample_missing_from_counts),
+                 class = "missing_from_counts")
+  expect_equal(dim(suppressWarnings(subset_to_samples(test_all_data, sample_subset))), c(100,13))
+  expect_equal(suppressWarnings(subset_to_samples(test_all_data, sample_subset)),
                test_all_data[ , c(1:7,9,11,13,15,17,19)])
 })

@@ -61,7 +61,8 @@ get_gene_metadata <- function(data) {
 #' Subset an RNA-seq dataset using a samples file
 #'
 #' \code{subset_to_samples} returns a data.frame of metadata,
-#' associated with the genes of an RNA-seq dataset
+#' counts and normalised counts with
+#'
 #'
 #' @param data df rna-seq data to get counts from
 #' @param samples df a samples df to subset the data to
@@ -77,35 +78,34 @@ get_gene_metadata <- function(data) {
 subset_to_samples <- function(data, samples, counts = TRUE, normalised_counts = TRUE) {
   subset_metadata <- get_gene_metadata(data)
   if (counts) {
-    # get counts
-    sample_counts <-
-      tryCatch(
-        get_counts(data, samples, normalised = FALSE),
-        warning = function(w){
-          if("sample_subset" %in% class(w)) {
-            suppressWarnings(get_counts(data, samples, normalised = FALSE))
-          } else {
-            get_counts(data, samples, normalised = FALSE)
-          }
-        }
-      )
+    # check if the samples match the counts
+    sample_counts <- tryCatch(
+      get_counts(data, samples, normalised = FALSE),
+      warning = function(w) {
+        all_counts <- get_counts(data, normalised = FALSE)
+        # subset to intersection of samples
+        available_samples <- intersect(samples$sample, colnames(all_counts))
+        warning("Sample info and counts do not match. Only samples in both were returned")
+        all_counts[ , available_samples ]
+      }
+    )
     # add back 'count' to end of column names
     colnames(sample_counts) <- paste(colnames(sample_counts), 'count')
   }
 
   if (normalised_counts) {
-    # get normalised counts and add normalised count back to col names
-    sample_norm_counts <-
-      tryCatch(
-        get_counts(data, samples, normalised = TRUE),
-        warning = function(w){
-          if("sample_subset" %in% class(w)) {
-            suppressWarnings(get_counts(data, samples, normalised = TRUE))
-          } else {
-            get_counts(data, samples, normalised = TRUE)
-          }
-        }
-      )
+    # subset to samples
+    sample_norm_counts <- tryCatch(
+      get_counts(data, samples, normalised = TRUE),
+      warning = function(w) {
+        all_norm_counts <- get_counts(data, normalised = TRUE)
+        # subset to intersection of samples
+        available_samples <- intersect(samples$sample, colnames(all_norm_counts))
+        warning("Sample info and normalised counts do not match. Only samples in both were returned")
+        all_norm_counts[ , available_samples ]
+      }
+    )
+    # add back 'normalised count' to end of column names
     colnames(sample_norm_counts) <- paste(colnames(sample_norm_counts), 'normalised count')
   }
 
