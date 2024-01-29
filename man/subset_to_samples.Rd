@@ -20,7 +20,8 @@ data.frame
 }
 \description{
 \code{subset_to_samples} returns a data.frame of metadata,
-associated with the genes of an RNA-seq dataset
+counts and normalised counts subset to the supplied sample
+data frame
 }
 \examples{
 non_count_data <- subset_to_samples(data, samples)

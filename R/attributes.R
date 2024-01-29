@@ -34,7 +34,8 @@ get_counts <- function(data, samples = NULL, normalised = FALSE) {
   # Subset and reorder count data
   if (!is.null(samples)) {
     check_samples_match_counts(count_data, samples)
-    count_data <- dplyr::select(count_data, dplyr::one_of(as.character(samples$sample)))
+    available_samples <- intersect(samples$sample, colnames(count_data))
+    count_data <- dplyr::select(count_data, dplyr::one_of(available_samples))
   }
 
   return(count_data)
@@ -61,8 +62,8 @@ get_gene_metadata <- function(data) {
 #' Subset an RNA-seq dataset using a samples file
 #'
 #' \code{subset_to_samples} returns a data.frame of metadata,
-#' counts and normalised counts with
-#'
+#' counts and normalised counts subset to the supplied sample
+#' data frame
 #'
 #' @param data df rna-seq data to get counts from
 #' @param samples df a samples df to subset the data to
@@ -85,7 +86,8 @@ subset_to_samples <- function(data, samples, counts = TRUE, normalised_counts = 
         all_counts <- get_counts(data, normalised = FALSE)
         # subset to intersection of samples
         available_samples <- intersect(samples$sample, colnames(all_counts))
-        warning("Sample info and counts do not match. Only samples in both were returned")
+        rlang::warn(class = class(w),
+                    message = paste(w$message, "Only samples in both were returned"))
         all_counts[ , available_samples ]
       }
     )
@@ -101,7 +103,8 @@ subset_to_samples <- function(data, samples, counts = TRUE, normalised_counts = 
         all_norm_counts <- get_counts(data, normalised = TRUE)
         # subset to intersection of samples
         available_samples <- intersect(samples$sample, colnames(all_norm_counts))
-        warning("Sample info and normalised counts do not match. Only samples in both were returned")
+        rlang::warn(class = class(w),
+                    message = paste(w$message, "Only samples in both were returned"))
         all_norm_counts[ , available_samples ]
       }
     )

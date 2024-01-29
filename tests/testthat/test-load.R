@@ -133,10 +133,14 @@ test_that("check_samples_match_counts works", {
   expect_true(check_samples_match_counts(counts, samples_data))
   # remove one sample from samples
   samples_tmp <- samples_data[ samples_data$sample != "sample-1", ]
-  expect_warning(check_samples_match_counts(counts, samples_tmp), "One or more extra samples in the counts data")
+  expect_warning(check_samples_match_counts(counts, samples_tmp),
+                 class = "missing_from_samples")
   # remove a sample from counts
   counts_tmp <- counts[ , colnames(counts) != "sample-6"]
-  expect_warning(check_samples_match_counts(counts_tmp, samples_data), "One or more samples are missing from the counts data")
+  expect_warning(check_samples_match_counts(counts_tmp, samples_data),
+                 class = "missing_from_counts")
+  expect_warning(check_samples_match_counts(counts_tmp, samples_tmp),
+                 class = "missing_from_both_samples_and_counts")
 })
 
 test_that("check_samples works", {
