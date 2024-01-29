@@ -253,6 +253,9 @@ normalise_counts <- function(rnaseq_data, samples){
   counts <- get_counts(rnaseq_data)
   # check samples match
   check_samples_match_counts(counts, samples)
+  available_samples <- intersect(samples$sample, colnames(counts))
+  counts <- counts[ , available_samples ]
+  samples <- samples[ samples$sample %in% available_samples, ]
   # make DESeq2 object
   DESeqData <- DESeq2::DESeqDataSetFromMatrix(counts, samples, design = ~ condition)
   DESeqData <- DESeq2::estimateSizeFactors(DESeqData)
@@ -260,8 +263,12 @@ normalise_counts <- function(rnaseq_data, samples){
   norm_counts <- DESeq2::counts(DESeqData, normalized = TRUE)
   # add back "normalised" to colnames
   colnames(norm_counts) <- sub("$", " normalised count", colnames(norm_counts))
+  # add "count" back to count columns
+  colnames(counts) <- sub("$", " count", colnames(counts))
   # add to rnaseq data
-  return(tibble::tibble(rnaseq_data, tibble::as_tibble(norm_counts)))
+  return(tibble::tibble(get_gene_metadata(rnaseq_data),
+                        tibble::as_tibble(counts),
+                        tibble::as_tibble(norm_counts)))
 }
 
 
