@@ -91,8 +91,14 @@ subset_to_samples <- function(data, samples, counts = TRUE, normalised_counts = 
         all_counts[ , available_samples ]
       }
     )
-    # add back 'count' to end of column names
-    colnames(sample_counts) <- paste(colnames(sample_counts), 'count')
+    if (is.null(sample_counts)) {
+      counts = FALSE
+      rlang::warn(class = "no_counts",
+                  "The rnaseq data.frame has no count columns")
+    } else {
+      # add back 'count' to end of column names
+      colnames(sample_counts) <- paste(colnames(sample_counts), 'count')
+    }
   }
 
   if (normalised_counts) {
@@ -108,8 +114,14 @@ subset_to_samples <- function(data, samples, counts = TRUE, normalised_counts = 
         all_norm_counts[ , available_samples ]
       }
     )
-    # add back 'normalised count' to end of column names
-    colnames(sample_norm_counts) <- paste(colnames(sample_norm_counts), 'normalised count')
+    if (is.null(sample_norm_counts)) {
+      normalised_counts = FALSE
+      rlang::warn(class = "no_norm_counts",
+                  "The rnaseq data.frame has no normalised count columns")
+    } else {
+      # add back 'normalised count' to end of column names
+      colnames(sample_norm_counts) <- paste(colnames(sample_norm_counts), 'normalised count')
+    }
   }
 
   if (counts) {

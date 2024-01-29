@@ -51,4 +51,11 @@ test_that("subset_to_samples", {
   expect_equal(dim(suppressWarnings(subset_to_samples(test_all_data, sample_subset))), c(100,13))
   expect_equal(suppressWarnings(subset_to_samples(test_all_data, sample_subset)),
                test_all_data[ , c(1:7,9,11,13,15,17,19)])
+  test_all_data_no_counts <- test_all_data[ , !grepl("count", colnames(test_all_data)) |
+                                              grepl("normalised count", colnames(test_all_data)) ]
+  expect_warning(subset_to_samples(test_all_data_no_counts, samples_data),
+                 class = "no_counts")
+  test_all_data_no_norm_counts <- test_all_data[ , !grepl("normalised count", colnames(test_all_data)) ]
+  expect_warning(subset_to_samples(test_all_data_no_norm_counts, samples_data),
+                 class = "no_norm_counts")
 })
