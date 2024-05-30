@@ -14,12 +14,7 @@
 #'
 #' @export
 load_rnaseq_data <- function(data_file, ...) {
-  # set col types
-  coltypes <- set_col_types(data_file)
-
-  # Read data
-  data <- readr::read_tsv(data_file, col_types = do.call(readr::cols, coltypes), ...)
-  data <- standardise_colnames(data)
+  data <- load_data(data_file, ...)
 
   return(data)
 }
@@ -42,19 +37,47 @@ load_rnaseq_data <- function(data_file, ...) {
 #'
 #' @export
 load_detct_data <- function(data_file, ...) {
-  # set col types
-  coltypes <- set_col_types(data_file)
-
   # Read data
-  data <- readr::read_tsv(data_file, col_types = do.call(readr::cols, coltypes), ...)
-  data <- standardise_colnames(data)
+  data <- load_data(data_file, ...)
 
-  if(!("RegionID" %in% colnames(data))) {
+  if (!("RegionID" %in% colnames(data))) {
     data <- data %>%
       dplyr::mutate(., RegionID = paste(Chr, RegionStart, RegionEnd, `3PrimeEndPosition`,
                                         `3PrimeEndStrand`, GeneID, sep = ":")) %>%
       dplyr::relocate(., RegionID)
   }
+
+  return(data)
+}
+
+#' Load data
+#'
+#' \code{load_data} is the underlying function used to load data
+#' It automatically detects the delimiter based on the filename and uses the
+#' appropriate [readr] function.
+#' Possibilities are [readr::read_csv()], [readr::read_tsv()] or [readr::readr_delim()]
+#' [readr::read_delim()] will require the delimiter passing in as an argument to
+#' [load_rnaseq_data()] or [load_detct_data()]
+#'
+#' @param data_file Name of file to load
+#' @param ... Other arguments pssed on to the [readr] functions
+#'
+#' @return data.frame The loaded data
+#'
+load_data <- function(data_file, ...) {
+  if (sub("\\.gz$", "", data_file) |> (\(x) grepl("\\.tsv", x))()) {
+    readr_func <- readr::read_tsv
+  } else if (sub("\\.gz$", "", data_file) |> (\(x) grepl("\\.csv", x))()) {
+    readr_func <- readr::read_csv
+  } else {
+    readr_func <- readr::read_delim
+  }
+
+  coltypes <- set_col_types(data_file, readr_func, ...)
+
+  # Read data
+  data <- readr_func(data_file, col_types = do.call(readr::cols, coltypes), ...)
+  data <- standardise_colnames(data)
 
   return(data)
 }
@@ -75,7 +98,7 @@ load_detct_data <- function(data_file, ...) {
 #' @examples
 #' data <- standardise_colnames('test_data.tsv')
 #'
-set_col_types <- function(data_file){
+set_col_types <- function(data_file, readr_func, ...){
   types_for_cols = c(
     "Chr" = "f",
     "Start" = "i",
@@ -93,8 +116,8 @@ set_col_types <- function(data_file){
   )
 
   # get columns
-  header <- readr::read_tsv(data_file, n_max = 1000,
-                            col_types = readr::cols())
+  header <- readr_func(data_file, n_max = 1000,
+                       col_types = readr::cols(), ...)
   standard_colnames <- colnames(standardise_colnames(header))
 
   coltype_for_column_name <- function(i, standard_colnames, types_for_cols, header) {
@@ -205,14 +228,14 @@ load_rnaseq_samples <- function(samples_file) {
     warning = function(w){
       # print(w)
       # print(w$message)
-      if(grepl("The following named parsers don't match the column names", w$message)) {
+      if (grepl("The following named parsers don't match the column names", w$message)) {
         # print("X1 match")
         header <- suppressWarnings(readr::read_tsv(samples_file, n_max = 2,
                                                    col_types = readr::cols()))
         cols_list <- readr::spec(header)$cols
         names(cols_list)[ names(cols_list) == "...1" ] <- "sample"
         cols_list[['sample']] <- readr::col_factor()
-        if('condition' %in% names(cols_list)) {
+        if ('condition' %in% names(cols_list)) {
           cols_list[['condition']] <- readr::col_factor()
         }
         return(readr::read_tsv(samples_file, skip = 1,
@@ -322,8 +345,8 @@ check_samples_match_counts <- function(count_data, samples) {
   extra_samples <- setdiff(samples_in_counts, samples$sample)
   missing_samples <- setdiff(samples$sample, samples_in_counts)
 
-  if(length(extra_samples) > 0) {
-    if(length(missing_samples) > 0) {
+  if (length(extra_samples) > 0) {
+    if (length(missing_samples) > 0) {
       rlang::warn(class = "missing_from_both_samples_and_counts",
                   message = paste(
                     paste("One or more samples are missing from the counts data,",
@@ -338,7 +361,7 @@ check_samples_match_counts <- function(count_data, samples) {
                                   paste0(extra_samples, collapse = ", "))
       )
     }
-  } else if(length(missing_samples) > 0) {
+  } else if (length(missing_samples) > 0) {
     rlang::warn(class = "missing_from_counts",
                 message = paste("One or more samples are missing from the counts data,",
                                 paste0(missing_samples, collapse = ", "))

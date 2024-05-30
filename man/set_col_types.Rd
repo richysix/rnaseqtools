@@ -4,7 +4,7 @@
 \alias{set_col_types}
 \title{Set the column types based on the column names}
 \usage{
-set_col_types(data_file)
+set_col_types(data_file, readr_func, ...)
 }
 \arguments{
 \item{data_file}{Name of file to open}
