@@ -50,6 +50,27 @@ load_detct_data <- function(data_file, ...) {
   return(data)
 }
 
+#' Load RNA-seq TPM data in from file
+#'
+#' \code{load_tpm_data} opens a file containing TPM data
+#' and returns a tibble with column names adjusted to
+#' take account of different column name formats.
+#'
+#' @param data_file char, Name of the file to open
+#' @param ... Arguments passed to \code{\link[readr]{read_tsv}}
+#'
+#' @return tibble
+#'
+#' @examples
+#' data <- load_tpm_data(data_file = 'all.tsv')
+#'
+#' @export
+load_tpm_data <- function(data_file, ...) {
+  data <- load_data(data_file, ...)
+
+  return(data)
+}
+
 #' Load data
 #'
 #' \code{load_data} is the underlying function used to load data
@@ -60,7 +81,7 @@ load_detct_data <- function(data_file, ...) {
 #' [load_rnaseq_data()] or [load_detct_data()]
 #'
 #' @param data_file Name of file to load
-#' @param ... Other arguments pssed on to the [readr] functions
+#' @param ... Other arguments passed on to the [readr] functions
 #'
 #' @return data.frame The loaded data
 #'
@@ -141,7 +162,10 @@ set_col_types <- function(data_file, readr_func, ...){
         # count columns should be integer
         return(readr::col_integer())
       }
-    } else {
+    } else if (grepl("tpm$", standard_colname)) {
+      return(readr::col_double())
+    }
+    else {
       # everything else should be as parsed
       return(readr::spec(header)$cols[[original_colname]])
     }

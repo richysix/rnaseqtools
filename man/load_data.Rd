@@ -9,7 +9,7 @@ load_data(data_file, ...)
 \arguments{
 \item{data_file}{Name of file to load}
 
-\item{...}{Other arguments pssed on to the [readr] functions}
+\item{...}{Other arguments passed on to the [readr] functions}
 }
 \value{
 data.frame The loaded data

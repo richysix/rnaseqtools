@@ -1,7 +1,7 @@
 Package: rnaseqtools
 Type: Package
 Title: Helpers for dealing with our RNA-seq output
-Version: 0.0.1.0
+Version: 0.0.2.0
 Authors@R: person("Richard", "White", email = "rich@bushclab.org", role = c("aut", "cre"))
 Description: A set of helper functions for dealing with RNA-seq output files.
     Includes functions for loading output files from DESeq2, 
@@ -16,7 +16,9 @@ Imports:
     tidyr,
     dplyr,
     tibble,
-    magrittr
+    magrittr,
+    purrr,
+    rlang
 RoxygenNote: 7.3.1
 Suggests: 
     testthat (>= 2.1.0)

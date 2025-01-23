@@ -20,25 +20,77 @@
 #' @export
 get_counts <- function(data, samples = NULL, normalised = FALSE) {
   if (normalised) {
-    count_data <- data[,grepl(".normalised.counts?$", names(data))]
-    names(count_data) <- gsub(".normalised.counts?$", "", names(count_data))
+    count_data <- get_cols(data, samples, ".normalised.counts?$")
   } else {
-    count_data <- data[,grepl(".counts?$", names(data)) &
-                         !grepl("normalised", names(data))]
-    names(count_data) <- gsub(".counts?$", "", names(count_data))
+    count_data <- get_cols(data, samples, ".counts?$")
   }
-  if (ncol(count_data) == 0) {
+  return(count_data)
+}
+
+## TO DO. Create get_tpm function
+#' Get TPM data for an RNA-seq dataset
+#'
+#' \code{get_tpm} returns a data.frame of tpms,
+#'
+#' @param data df rna-seq data to get tpms from
+#' @param samples df a samples df to subset the data to
+#'
+#' @return data.frame
+#' If there is no tpm data in the supplied data frame
+#' (i.e.) no column names containing "tpm" then NULL is returned
+#'
+#' @examples
+#' tpms <- get_tpms(data)
+#' tpms_subset <- get_tpms(data, samples)
+#'
+#' @export
+get_tpms <- function(data, samples = NULL) {
+  return(get_cols(data, samples, ".tpms?$"))
+}
+
+# alias for get_tpms
+#' @export
+get_tpm <- function(data, samples = NULL) {
+  return(get_tpms(data, samples))
+}
+
+
+#' Get columns from an RNA-seq dataset
+#'
+#' \code{get_cols} is a helper function to get either counts,
+#' normalised counts or tpm from an RNA-seq data frame
+#'
+#' @param data df rna-seq data to get columns from
+#' @param samples df a samples df to subset the data to
+#' @param cols Str to use as a search term
+#'
+#' @return data.frame
+#' If there no matching columns in the supplied data frame
+#' then NULL is returned
+#'
+#' @examples
+#' counts <- get_cols(data, samples, ".counts?$")
+#' norm_counts <- get_cols(data, samples, ".normalised.counts?$")
+#' tpm <- get_cols(data, samples, ".tpms?$")
+#'
+get_cols <- function(data, samples = NULL, cols = ".counts?$") {
+  selected_cols <- data[ , grepl(cols, names(data))]
+  if (grepl("count", cols) & !grepl("normalised", cols)) {
+    selected_cols <- selected_cols[ , !grepl("normalised", colnames(selected_cols))]
+  }
+  names(selected_cols) <- gsub(cols, "", names(selected_cols))
+  if (ncol(selected_cols) == 0) {
     return(NULL)
   }
 
   # Subset and reorder count data
   if (!is.null(samples)) {
-    check_samples_match_counts(count_data, samples)
-    available_samples <- intersect(samples$sample, colnames(count_data))
-    count_data <- dplyr::select(count_data, dplyr::one_of(available_samples))
+    check_samples_match_counts(selected_cols, samples)
+    available_samples <- intersect(samples$sample, colnames(selected_cols))
+    selected_cols <- dplyr::select(selected_cols, dplyr::all_of(available_samples))
   }
 
-  return(count_data)
+  return(selected_cols)
 }
 
 #' Get non count data for an RNA-seq dataset
@@ -55,7 +107,7 @@ get_counts <- function(data, samples = NULL, normalised = FALSE) {
 #'
 #' @export
 get_gene_metadata <- function(data) {
-  non_count_data <- data[ , !grepl("count", colnames(data)) ]
+  non_count_data <- data[ , !grepl("count", colnames(data)) & !grepl("tpm", colnames(data)) ]
   return(non_count_data)
 }
 
@@ -69,6 +121,7 @@ get_gene_metadata <- function(data) {
 #' @param samples df a samples df to subset the data to
 #' @param counts logical indicating whether to include raw counts in the results
 #' @param normalised_counts logical indicating whether to include normalised counts in the results
+#' @param tpm logical indicating whether to include tpm values in the results
 #'
 #' @return data.frame
 #'
@@ -76,8 +129,10 @@ get_gene_metadata <- function(data) {
 #' non_count_data <- subset_to_samples(data, samples)
 #'
 #' @export
-subset_to_samples <- function(data, samples, counts = TRUE, normalised_counts = TRUE) {
+subset_to_samples <-
+  function(data, samples, counts = TRUE, normalised_counts = TRUE, tpm = FALSE) {
   subset_metadata <- get_gene_metadata(data)
+
   if (counts) {
     # check if the samples match the counts
     sample_counts <- tryCatch(
@@ -92,13 +147,14 @@ subset_to_samples <- function(data, samples, counts = TRUE, normalised_counts = 
       }
     )
     if (is.null(sample_counts)) {
-      counts = FALSE
       rlang::warn(class = "no_counts",
                   "The rnaseq data.frame has no count columns")
     } else {
       # add back 'count' to end of column names
       colnames(sample_counts) <- paste(colnames(sample_counts), 'count')
     }
+  } else {
+    sample_counts = NULL
   }
 
   if (normalised_counts) {
@@ -122,20 +178,39 @@ subset_to_samples <- function(data, samples, counts = TRUE, normalised_counts = 
       # add back 'normalised count' to end of column names
       colnames(sample_norm_counts) <- paste(colnames(sample_norm_counts), 'normalised count')
     }
+  } else {
+    sample_norm_counts = NULL
   }
 
-  if (counts) {
-    if (normalised_counts) {
-      subset_data <- tibble::as_tibble(cbind(subset_metadata, sample_counts, sample_norm_counts))
+  if (tpm) {
+    # subset to samples
+    sample_tpm <- tryCatch(
+      get_tpms(data, samples),
+      warning = function(w) {
+        all_tpm <- get_tpms(data)
+        # subset to intersection of samples
+        available_samples <- intersect(samples$sample, colnames(all_tpm))
+        rlang::warn(class = class(w),
+                    message = paste(w$message, "Only samples in both were returned"))
+        all_tpm[ , available_samples ]
+      }
+    )
+    if (is.null(sample_tpm)) {
+      rlang::warn(class = "no_tpm",
+                  "The rnaseq data.frame has no normalised count columns")
     } else {
-      subset_data <- tibble::as_tibble(cbind(subset_metadata, sample_counts))
+      # add back 'tpm' to end of column names
+      colnames(sample_tpm) <- paste(colnames(sample_tpm), 'tpm')
     }
   } else {
-    if (normalised_counts) {
-      subset_data <- tibble::as_tibble(cbind(subset_metadata, sample_norm_counts))
-    } else {
-      subset_data <- tibble::as_tibble(subset_metadata)
-    }
+    sample_tpm = NULL
   }
-  return(subset_data)
+
+  subset_data <- list(
+    subset_metadata,
+    sample_counts,
+    sample_norm_counts,
+    sample_tpm
+  )
+  return(purrr::list_cbind(subset_data))
 }

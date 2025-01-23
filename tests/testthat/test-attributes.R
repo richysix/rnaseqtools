@@ -40,6 +40,10 @@ test_that("get_gene_metadata",{
   expect_equal(colnames(metadata), colnames(test_all_data)[ !grepl("count", colnames(test_all_data)) ])
   expect_equal(dim(metadata), dim(test_all_data[ , !grepl("count", colnames(test_all_data)) ]))
   expect_equal(metadata, test_all_data[ , !grepl("count", colnames(test_all_data)) ])
+  expect_equal(
+    get_gene_metadata(tpm_data),
+    dplyr::select(tpm_data, chr:`Gene name`)
+  )
 })
 
 # subset_to_samples
@@ -58,4 +62,29 @@ test_that("subset_to_samples", {
   test_all_data_no_norm_counts <- test_all_data[ , !grepl("normalised count", colnames(test_all_data)) ]
   expect_warning(subset_to_samples(test_all_data_no_norm_counts, samples_data),
                  class = "no_norm_counts")
+
+  expect_warning(subset_to_samples(tpm_data, sample_subset),
+                 class = "missing_from_samples")
+  expect_warning(subset_to_samples(tpm_data, sample_missing_from_counts),
+                 class = "missing_from_counts")
+  tpm_subset <- suppressWarnings(subset_to_samples(data = tpm_data, samples = sample_subset, tpm = TRUE))
+  expect_equal(dim(tpm_subset), c(100,10))
+  expect_equal(tpm_subset, tpm_data[ , c(1:7,9,11,13)])
+  tpm_data_no_tpm <- tpm_data[ , !grepl("tpm", colnames(tpm_data)) ]
+  expect_warning(subset_to_samples(tpm_data_no_tpm, samples_data),
+                 class = "no_tpm")
+})
+
+test_that("get_cols", {
+  expect_equal(get_cols(test_all_data, samples_data, ".counts?$"), counts)
+  expect_equal(get_cols(test_all_data, samples_data, ".normalised.counts?$"), norm_counts)
+  expect_equal(get_cols(tpm_data, samples_data, ".tpms?$"), tpm)
+})
+
+test_tpm <- get_tpms(tpm_data, samples_data)
+test_that("get_tpm", {
+  expect_equal(colnames(test_tpm), colnames(tpm))
+  expect_equal(dim(test_tpm), dim(tpm))
+  expect_identical(test_tpm, tpm)
+  expect_equal(get_tpms(tpm_data), tpm)
 })

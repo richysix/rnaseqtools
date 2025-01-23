@@ -46,7 +46,7 @@ expected_coltypes <- list(
 )
 
 test_that("coltypes",{
-  expect_equal(set_col_types('test_data.tsv'), expected_coltypes)
+  expect_equal(set_col_types('test_data.tsv', readr::read_tsv), expected_coltypes)
 })
 
 test_that("colnames", {
@@ -167,6 +167,12 @@ test_that("normalise_counts works", {
                  "One or more samples are missing from the counts data")
   expect_warning(normalise_counts(all_data_tmp, samples_tmp),
                  "One or more samples are missing from the counts data.*One or more extra samples in the counts data")
+})
+
+test_that("load_tpm_data works", {
+  test_tpm <- load_tpm_data('test_tpm_data.tsv')
+  expect_equal(nrow(test_tpm), 100)
+  expect_equal(ncol(test_tpm), 13)
 })
 
 teardown({
